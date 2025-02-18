@@ -20,7 +20,7 @@ class ToDoListViewModel {
             } else if let data = data {
                 ToDoCoreDataManager.shared.mergeToDos(apiToDos: data.todos)
                 self.fetchToDos {
-                    self.success?()  // Обновление UI на главном потоке
+                    self.success?()  
                 }
             }
         }
@@ -28,11 +28,12 @@ class ToDoListViewModel {
 
     func fetchToDos(completion: @escaping () -> Void) {
         self.toDoList = ToDoCoreDataManager.shared.loadToDos()
+        print("Loaded ToDos: \(self.toDoList)") // Это должно вывести все задачи, включая описание
         DispatchQueue.main.async {
             completion()
         }
-        print("Fetching todos, current count: \(toDoList.count)")
     }
+
 
     func addTodoToCoreData(_ newTodo: Todo) {
         ToDoCoreDataManager.shared.saveToDo(newTodo)

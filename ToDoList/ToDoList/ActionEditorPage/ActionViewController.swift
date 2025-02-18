@@ -22,8 +22,7 @@ class ActionViewController: UIViewController {
 
     override func viewDidLoad() {
           super.viewDidLoad()
-          
-          // Проверяем, что toDoList не равно nil
+
           guard let toDo = toDoList else {
               actionName.text = ""
               actionDefiniition.text = ""

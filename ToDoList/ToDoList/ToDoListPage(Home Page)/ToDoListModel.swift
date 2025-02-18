@@ -11,7 +11,6 @@ import Foundation
 struct Welcome: Codable {
     let todos: [Todo]
     let total, skip, limit: Int
-    
 }
 
 // MARK: - Todo
@@ -20,14 +19,10 @@ struct Todo: Codable {
     let todo: String
     let completed: Bool
     let userID: Int
-    let createdDate: Date?
-    let description: String?
 
     enum CodingKeys: String, CodingKey {
         case id, todo, completed
         case userID = "userId"
-        case createdDate = "createdDate"
-        case description = "Description"
     }
-    
 }
+
