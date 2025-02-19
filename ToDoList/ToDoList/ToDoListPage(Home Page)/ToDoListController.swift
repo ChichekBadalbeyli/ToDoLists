@@ -9,7 +9,15 @@ import UIKit
 import Alamofire
 class ToDoListController: UIViewController{
     
-    var tableView = UITableView()
+    var viewModel = ToDoListViewModel()
+    
+    var tableView: UITableView = {
+        var table = UITableView()
+        table.separatorColor = .gray
+        table.separatorStyle = .singleLine
+        return table
+        }()
+    
     var headLabel: UILabel = {
         var heading = UILabel()
         heading.text = "Задачи"
@@ -18,32 +26,52 @@ class ToDoListController: UIViewController{
         return heading
     }()
     
+    var searchBar: UISearchBar = {
+       var search = UISearchBar()
+        search.layer.cornerRadius = 10
+        search.barTintColor = .gray
+    //    search.layer.borderColor = UIColor.black.cgColor
+        search.clipsToBounds = true
+        return search
+    }()
+    
     func configureUI() {
         view.addSubview(headLabel)
         headLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(searchBar)
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
     }
     
     func configureConstraints() {
-        
         headLabel.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
+            bottom: searchBar.topAnchor,
+            leading: view.leadingAnchor,
+            trailing: view.trailingAnchor,
+            constraint: (top: 10, bottom: 10, leading: 20, trailing: 20)
+        )
+        
+        searchBar.anchor(
+            top: headLabel.bottomAnchor,
             bottom: tableView.topAnchor,
             leading: view.leadingAnchor,
             trailing: view.trailingAnchor,
-            constraint: (top: 10, bottom: 62, leading: 20, trailing: 20)
+            constraint: (top: 10, bottom: 16, leading: 20, trailing: 20),
+            width: 320,
+            height: 36
         )
         
         tableView.anchor(
-            top: headLabel.bottomAnchor,
+            top: searchBar.bottomAnchor,
             bottom: view.bottomAnchor,
             leading: view.leadingAnchor,
             trailing: view.trailingAnchor,
-            constraint: (top: 10, bottom: 0, leading: 20, trailing: 20)
+            constraint: (top: 16, bottom: -60, leading: 20, trailing: 20)
             
         )
-
+        
     }
     
     func configureTableView() {
@@ -55,197 +83,108 @@ class ToDoListController: UIViewController{
         tableView.allowsSelection = true
         tableView.allowsMultipleSelection = false
     }
-    var viewModel = ToDoListViewModel()
-     override func viewDidLoad() {
-            super.viewDidLoad()
-         view.backgroundColor = .black
-         configureUI()
-         configureConstraints()
-         configureTableView()
-
-
-         viewModel.success = { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tableView.reloadData()
-                }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        configureUI()
+        configureConstraints()
+        configureTableView()
+        
+        viewModel.success = { [weak self] in
+            DispatchQueue.main.async {
+                self?.tableView.reloadData()
             }
-
-            viewModel.error = { error in
-                print("Error: \(error)")
-            }
-         tableView.gestureRecognizers?.forEach { recognizer in
-             print("Gesture: \(recognizer)")
-         }
-         viewModel.fetchToDos { [weak self] in
-                    DispatchQueue.main.async {
-                        self?.tableView.reloadData()
-                    }
-                }
-
-                viewModel.getAndSaveTodos()
-         let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-            tableView.addGestureRecognizer(longPressGesture)
-         tableView.addInteraction(UIContextMenuInteraction(delegate: self))
-            }
-
+        }
+        
+        viewModel.error = { error in
+            print("Error: \(error)")
+        }
+//        tableView.gestureRecognizers?.forEach { recognizer in
+//            print("Gesture: \(recognizer)")
+//        }
+//        viewModel.fetchToDos { [weak self] in
+//            DispatchQueue.main.async {
+//                self?.tableView.reloadData()
+//            }
+//        }
+        
+        viewModel.getAndSaveTodos()
+    }
+    
 }
 
 
-extension ToDoListController: UITableViewDelegate, UITableViewDataSource,UIContextMenuInteractionDelegate {
-
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        let interaction = UIContextMenuInteraction(delegate: self)
-        cell.addInteraction(interaction)
-    }
-
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        guard let indexPath = tableView.indexPathForRow(at: location) else {
-            return nil
-        }
-
+extension ToDoListController: UITableViewDelegate, UITableViewDataSource {
+    
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
-            let editAction = UIAction(title: "Edit", image: UIImage(systemName: "pencil")) { _ in
-                self.navigateToEditScreen(with: self.viewModel.toDoList[indexPath.row])
+            let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
+                self.editItem(at: indexPath)
             }
-
-            let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
-                self.deleteTask(self.viewModel.toDoList[indexPath.row])
+            let shareAction = UIAction(title: "Поделиться", image: UIImage(systemName: "square.and.arrow.up")) { _ in
+                self.shareItem(at: indexPath)
             }
-
-            return UIMenu(title: "", children: [editAction, deleteAction])
+            let deleteAction = UIAction(title: "Удалить", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
+                self.deleteItem(at: indexPath)
+            }
+            return UIMenu(title: "Действия", children: [editAction, shareAction, deleteAction])
         }
     }
-
-
-        // Методы делегата для анимации меню
-        func contextMenuInteraction(_ interaction: UIContextMenuInteraction, willPerformWithAnimator animator: UIContextMenuInteractionAnimating?) {
-            print("Context Menu is about to appear.")
-        }
-
-        func contextMenuInteraction(_ interaction: UIContextMenuInteraction, didEndAnimatingWithAnimator animator: UIContextMenuInteractionAnimating?) {
-            print("Context Menu has ended.")
-        }
-
     
-
-    @objc func handleLongPress(_ gestureRecognizer: UILongPressGestureRecognizer) {
-        let point = gestureRecognizer.location(in: tableView)
-        if let indexPath = tableView.indexPathForRow(at: point) {
-            print("Long press on row: \(indexPath.row)")
-            // Вызываем контекстное меню
-            tableView.delegate?.tableView?(tableView, contextMenuConfigurationForRowAt: indexPath, point: point)
-        }
+    func editItem(at indexPath: IndexPath) {
+        let todo = viewModel.toDoList[indexPath.row]
+        print("Редактируем задачу: \(todo.todo)")
+        navigateToEditScreen(with: todo)
     }
-     func tableView(_ tableView: UITableView, shouldShowMenuForRowAt indexPath: IndexPath) -> Bool {
-         return true
-     }
-
-
-     func tableView(_ tableView: UITableView, canHandleMenuActionAt indexPath: IndexPath) -> Bool {
-         return true
-     }
-//     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-//         print("contextMenuConfigurationForRowAt called for row \(indexPath.row)")
-//         return nil
-//     }
-
-
-            // MARK: - UITableView DataSource & Delegate
-
-            func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-                return 100
-            }
-
-            func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-                return viewModel.toDoList.count
-            }
-
-            func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-                let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoListCell", for: indexPath) as! ToDoListCell
-                let todo = viewModel.toDoList[indexPath.row]
-                   cell.configure(with: todo)
-                cell.backgroundColor = .black
-                cell.selectionStyle = .none
-                return cell
-            }
-
-            // MARK: - Context Menu Configuration
-
-//     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-//         print("contextMenuConfigurationForRowAt called for row \(indexPath.row)")
-//         tableView.reloadData()
-//         return UIContextMenuConfiguration(
-//             identifier: nil,
-//             previewProvider: nil
-//         ) { _ in
-//             let editAction = UIAction(title: "Edit", image: UIImage(systemName: "pencil")) { _ in
-//               //  print("Edit \(self.todos[indexPath.row])")
-//             }
-//             let deleteAction = UIAction(title: "Delete", image: UIImage(systemName: "trash"), attributes: .destructive) { _ in
-//                 //print("Delete \(self.todos[indexPath.row])")
-//             }
-//             return UIMenu(title: "", children: [editAction, deleteAction])
-//         }
-//     }
-
-            // Действия для редактирования и удаления
-            func navigateToEditScreen(with todo: Todo) {
-                print("Переход на экран редактирования для задачи: \(todo.todo)")
-                // Реализуйте переход на экран редактирования
-            }
-
-    func deleteTask(_ todo: Todo) {
+    
+    func shareItem(at indexPath: IndexPath) {
+        let todo = viewModel.toDoList[indexPath.row]
+        let activityVC = UIActivityViewController(activityItems: [todo.todo], applicationActivities: nil)
+        present(activityVC, animated: true)
+    }
+    
+    func deleteItem(at indexPath: IndexPath) {
+        let todo = viewModel.toDoList[indexPath.row]
         viewModel.deleteTodoFromCoreData(todo)
-        viewModel.fetchToDos {
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
-            }
+        viewModel.toDoList.remove(at: indexPath.row)
+        DispatchQueue.main.async {
+            self.tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }
 
+   
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return viewModel.toDoList.count
+    }
     
-        
-//        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-//            viewModel.toDoList.count
-//        }
-//        
-//        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//            let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoListCell", for: indexPath) as! ToDoListCell
-//            cell.configure(with: viewModel.toDoList[indexPath.row])
-//            cell.backgroundColor = .black
-//            cell.tintColor = .white
-//            return cell
-//        }
-//        
-//        func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//            let selectedTodo = viewModel.toDoList[indexPath.row]
-//            let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
-//            
-//            coordinator.start(
-//                onAddNewTodo: { [weak self] newToDo in
-//                    self?.viewModel.addTodoToCoreData(newToDo)
-//                },
-//                toDoList: selectedTodo, // Передаем выбранную задачу для редактирования
-//                onEditTodo: { [weak self] updatedTodo in
-//                    self?.viewModel.updateTodoInCoreData(updatedTodo) // Обновляем задачу в Core Data
-//                }
-//            )
-//        }
-        
-        
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoListCell", for: indexPath) as! ToDoListCell
+        let todo = viewModel.toDoList[indexPath.row]
+        cell.configure(with: todo)
+        cell.backgroundColor = .black
+        cell.selectionStyle = .none
+        return cell
+    }
+    
+    func navigateToEditScreen(with todo: Todo) {
+        print("Переход на экран редактирования для задачи: \(todo.todo)")
+ 
+    }
+    
     @IBAction func newActionButton(_ sender: Any) {
         let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
-            coordinator.start(
-                onAddNewTodo: { [weak self] newToDo in
-                    self?.viewModel.addTodoToCoreData(newToDo)
-                    DispatchQueue.main.async {
-                        self?.tableView.reloadData() // Обновляем таблицу после добавления нового задания
-                    }
-                },
-                toDoList: nil,
-                onEditTodo: { _ in } // Пустое замыкание для редактирования
-            )
+        coordinator.start(
+            onAddNewTodo: { [weak self] newToDo in
+
+                DispatchQueue.main.async {
+                    self?.tableView.reloadData()
+                }
+            },
+            toDoList: nil,
+            onEditTodo: { _ in }
+        )
     }
-        
-    }
+    
+}
 

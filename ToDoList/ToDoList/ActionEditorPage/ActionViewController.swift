@@ -15,7 +15,7 @@ class ActionViewController: UIViewController {
     @IBOutlet var actionDefiniition: UITextField!
     
     @IBOutlet var date: UILabel!
-    var viewModel = ToDoListViewModel()
+   // var viewModel = ToDoListViewModel(context: <#NSManagedObjectContext#>)
         var addNewToDo: ((Todo) -> Void)?
         var toDoList: Todo? // Опциональное значение
         var editAction: ((Todo) -> Void)?
@@ -32,7 +32,7 @@ class ActionViewController: UIViewController {
           
           // Если toDoList существует, безопасно извлекаем его свойства
           actionName.text = toDo.todo
-          actionDefiniition.text = toDo.description
+         // actionDefiniition.text = toDo.description
       }
 
       override func viewWillDisappear(_ animated: Bool) {
@@ -45,16 +45,16 @@ class ActionViewController: UIViewController {
           }
           
           // Создаем новый объект Todo с безопасным извлечением значений
-          let updatedTodo = Todo(
-              id: toDoList?.id ?? UUID().hashValue, // Если id нет, генерируем новый
-              todo: todoText,
-              completed: toDoList?.completed ?? false, // Если completed нет, по умолчанию false
-              userID: toDoList?.userID ?? 1, // Если userID нет, по умолчанию 1
-              createdDate: toDoList?.createdDate ?? Date(), // Если дата нет, используем текущую
-              description: definition
-          )
+//          let updatedTodo = Todo(
+//              id: toDoList?.id ?? UUID().hashValue, // Если id нет, генерируем новый
+//              todo: todoText,
+//              completed: toDoList?.completed ?? false, // Если completed нет, по умолчанию false
+//              userID: toDoList?.userID ?? 1, // Если userID нет, по умолчанию 1
+//              createdDate: toDoList?.createdDate ?? Date(), // Если дата нет, используем текущую
+//              description: definition
+//          )
           
           // Передаем обновленный объект в замыкание
-          editAction?(updatedTodo)
+        //  editAction?(updatedTodo)
       }
   }

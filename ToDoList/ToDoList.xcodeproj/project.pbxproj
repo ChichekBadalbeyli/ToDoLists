@@ -26,8 +26,9 @@
 		393727E12D01E4A9003CB76E /* ToDoListCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393727E02D01E4A9003CB76E /* ToDoListCoordinator.swift */; };
 		393727E32D01E506003CB76E /* ActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393727E22D01E506003CB76E /* ActionViewController.swift */; };
 		393727E52D032790003CB76E /* CoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393727E42D032790003CB76E /* CoreDataManager.swift */; };
-		393727E72D033270003CB76E /* ToDoCoreDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393727E62D033270003CB76E /* ToDoCoreDataManager.swift */; };
 		39955E642D648A7200E4A76B /* BaseFuction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E632D648A7200E4A76B /* BaseFuction.swift */; };
+		39955E722D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E702D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift */; };
+		39955E732D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E712D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,8 +52,9 @@
 		393727E02D01E4A9003CB76E /* ToDoListCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListCoordinator.swift; sourceTree = "<group>"; };
 		393727E22D01E506003CB76E /* ActionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewController.swift; sourceTree = "<group>"; };
 		393727E42D032790003CB76E /* CoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataManager.swift; sourceTree = "<group>"; };
-		393727E62D033270003CB76E /* ToDoCoreDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoCoreDataManager.swift; sourceTree = "<group>"; };
 		39955E632D648A7200E4A76B /* BaseFuction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseFuction.swift; sourceTree = "<group>"; };
+		39955E702D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ToDoEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		39955E712D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ToDoEntity+CoreDataProperties.swift"; path = "../ToDoEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,8 +98,9 @@
 				393727C02CFF1D4F003CB76E /* LaunchScreen.storyboard */,
 				393727C32CFF1D4F003CB76E /* Info.plist */,
 				393727BB2CFF1D4C003CB76E /* ToDoList.xcdatamodeld */,
+				39955E702D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift */,
+				39955E712D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift */,
 				393727E42D032790003CB76E /* CoreDataManager.swift */,
-				393727E62D033270003CB76E /* ToDoCoreDataManager.swift */,
 			);
 			path = ToDoList;
 			sourceTree = "<group>";
@@ -226,6 +229,8 @@
 				393727B52CFF1D4C003CB76E /* SceneDelegate.swift in Sources */,
 				393727D52D006BC4003CB76E /* NetworkManager.swift in Sources */,
 				393727D72D007465003CB76E /* NetworkProtocol.swift in Sources */,
+				39955E722D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift in Sources */,
+				39955E732D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift in Sources */,
 				393727DF2D01DE5B003CB76E /* CoordinatorProtocol.swift in Sources */,
 				393727DB2D007703003CB76E /* ToDoListManager.swift in Sources */,
 				393727D92D0075C7003CB76E /* ToDoListEndpoint.swift in Sources */,
@@ -235,7 +240,6 @@
 				393727CC2CFF2F3D003CB76E /* ToDoListCell.swift in Sources */,
 				393727BD2CFF1D4C003CB76E /* ToDoList.xcdatamodeld in Sources */,
 				393727E52D032790003CB76E /* CoreDataManager.swift in Sources */,
-				393727E72D033270003CB76E /* ToDoCoreDataManager.swift in Sources */,
 				393727D02D006AA8003CB76E /* BaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -476,6 +480,7 @@
 			currentVersion = 393727BC2CFF1D4C003CB76E /* ToDoList.xcdatamodel */;
 			path = ToDoList.xcdatamodeld;
 			sourceTree = "<group>";
+			usesTabs = 0;
 			versionGroupType = wrapper.xcdatamodel;
 		};
 /* End XCVersionGroup section */
