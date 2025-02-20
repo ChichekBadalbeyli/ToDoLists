@@ -11,12 +11,25 @@ class ToDoListController: UIViewController{
     
     var viewModel = ToDoListViewModel()
     
+    var topSafeArea: UIView = {
+       var topView = UIView()
+        topView.backgroundColor = .black
+        return topView
+    }()
+    
+    var bottomSafeArea: UIView = {
+       var bottomView = UIView()
+        bottomView.backgroundColor = .gray
+      
+        return bottomView
+    }()
+    
     var tableView: UITableView = {
         var table = UITableView()
         table.separatorColor = .gray
         table.separatorStyle = .singleLine
         return table
-        }()
+    }()
     
     var headLabel: UILabel = {
         var heading = UILabel()
@@ -27,24 +40,90 @@ class ToDoListController: UIViewController{
     }()
     
     var searchBar: UISearchBar = {
-       var search = UISearchBar()
+        var search = UISearchBar()
         search.layer.cornerRadius = 10
         search.barTintColor = .gray
-    //    search.layer.borderColor = UIColor.black.cgColor
         search.clipsToBounds = true
         return search
     }()
     
+    //    var searchBar: UISearchBar = {
+    //        var search = UISearchBar()
+    //        search.layer.cornerRadius = 10
+    //        search.barTintColor = .gray
+    //        search.clipsToBounds = true
+    //
+    //        let microphoneButton = UIButton(type: .custom)
+    //        microphoneButton.setImage(UIImage(systemName: "mic.fill"), for: .normal)
+    //        microphoneButton.tintColor = .white
+    //        microphoneButton.addTarget(self, action: #selector(microphoneTapped), for: .touchUpInside)
+    //
+    //        // Adding the microphone button to the search bar
+    //        search.addSubview(microphoneButton)
+    //
+    //        // Setting up constraints for the microphone button
+    //        microphoneButton.translatesAutoresizingMaskIntoConstraints = false
+    //        NSLayoutConstraint.activate([
+    //            microphoneButton.trailingAnchor.constraint(equalTo: search.trailingAnchor, constant: -10),
+    //            microphoneButton.centerYAnchor.constraint(equalTo: search.centerYAnchor)
+    //        ])
+    //
+    //        return search
+    //    }()
+    
+    var footerCountLabel: UILabel = {
+        var label = UILabel()
+        label.textColor = .white
+        label.textAlignment = .center
+        label.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        return label
+    }()
+    var footer: UIView = {
+        var footer = UIView()
+        footer.backgroundColor = .gray
+        return footer
+    }()
+    
+    @objc func microphoneTapped() {
+        
+    }
+    
+    
     func configureUI() {
+        view.addSubview(topSafeArea)
+        topSafeArea.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(bottomSafeArea)
+        bottomSafeArea.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(headLabel)
         headLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(searchBar)
         searchBar.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(footer)
+        footer.translatesAutoresizingMaskIntoConstraints = false
+        footer.addSubview(footerCountLabel)
+        footerCountLabel.translatesAutoresizingMaskIntoConstraints = false
     }
     
     func configureConstraints() {
+        topSafeArea.anchor(
+            top: view.topAnchor,
+            bottom: view.safeAreaLayoutGuide.topAnchor,
+            leading: view.leadingAnchor,
+            trailing: view.trailingAnchor,
+            constraint: (top: 0, bottom: 0, leading: 0, trailing: 0)
+        )
+        
+        bottomSafeArea.anchor(
+            top: footer.bottomAnchor,
+            bottom: tableView.bottomAnchor,
+            leading: view.leadingAnchor,
+            trailing: view.trailingAnchor,
+            constraint: (top: 0, bottom: -60, leading: 0, trailing: 0)
+        )
+        
+        
         headLabel.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             bottom: searchBar.topAnchor,
@@ -65,13 +144,27 @@ class ToDoListController: UIViewController{
         
         tableView.anchor(
             top: searchBar.bottomAnchor,
-            bottom: view.bottomAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
             leading: view.leadingAnchor,
             trailing: view.trailingAnchor,
             constraint: (top: 16, bottom: -60, leading: 20, trailing: 20)
-            
         )
         
+        footer.anchor(
+            top: tableView.bottomAnchor,
+            bottom: view.safeAreaLayoutGuide.bottomAnchor,
+            leading: view.leadingAnchor,
+            trailing: view.trailingAnchor,
+            constraint: (top: 94, bottom: 0, leading: 0, trailing: 0)
+        )
+        
+        footerCountLabel.anchor(
+            top: footer.topAnchor,
+            bottom: footer.bottomAnchor,
+            leading: footer.leadingAnchor,
+            trailing: footer.trailingAnchor,
+            constraint: (top: 20.5, bottom: 15.5, leading: 158, trailing: 158)
+        )
     }
     
     func configureTableView() {
@@ -91,24 +184,16 @@ class ToDoListController: UIViewController{
         configureTableView()
         
         viewModel.success = { [weak self] in
-            DispatchQueue.main.async {
-                self?.tableView.reloadData()
+                DispatchQueue.main.async {
+                    self?.tableView.reloadData() // ✅ Verileri güncelle
+                }
             }
-        }
-        
-        viewModel.error = { error in
-            print("Error: \(error)")
-        }
-//        tableView.gestureRecognizers?.forEach { recognizer in
-//            print("Gesture: \(recognizer)")
-//        }
-//        viewModel.fetchToDos { [weak self] in
-//            DispatchQueue.main.async {
-//                self?.tableView.reloadData()
-//            }
-//        }
-        
-        viewModel.getAndSaveTodos()
+
+            viewModel.error = { error in
+                print("Error: \(error)")
+            }
+
+            viewModel.getAndSaveTodos()
     }
     
 }
@@ -132,11 +217,74 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource {
         }
     }
     
+//    func editItem(at indexPath: IndexPath) {
+//        var selectedTodo = viewModel.toDoList[indexPath.row]
+//        
+//        let actionController = ActionViewController()
+//        navigationController?.pushViewController(actionController, animated: true)
+        
+//        let actionController = ActionViewController()
+//
+//        // Передаем ToDoEntity в ActionViewController
+//        if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == Int64(selectedTodo.id) }) {
+//            actionController.todoEntity = todoEntity
+//        }
+//
+//        actionController.completionHandler = { [weak self] updatedTodoEntity in
+//            // Передаем обратно объект ToDoEntity
+//            CoreDataManager.shared.updateTodoInCoreData(updatedTodoEntity)
+//
+//            // Обновляем отображаемую задачу
+//            selectedTodo.todo = updatedTodoEntity.todo ?? ""
+//            selectedTodo.descriptionText = updatedTodoEntity.descriptionText ?? ""
+//            selectedTodo.createdDate = updatedTodoEntity.createdDate ?? Date()
+//
+//            self?.viewModel.toDoList[indexPath.row] = selectedTodo
+//
+//            DispatchQueue.main.async {
+//                self?.tableView.reloadRows(at: [indexPath], with: .automatic)
+//            }
+//        }
+
+   //     navigationController?.pushViewController(actionController, animated: true)
+        
+        
+   // }
+
+
+
     func editItem(at indexPath: IndexPath) {
-        let todo = viewModel.toDoList[indexPath.row]
-        print("Редактируем задачу: \(todo.todo)")
-        navigateToEditScreen(with: todo)
+        let selectedTodo = viewModel.toDoList[indexPath.row]
+
+        let actionController = ToDoActionController()
+        actionController.todo = selectedTodo
+
+        // ✅ Güncelleme tamamlandığında CoreData’dan açıklama ve tarih al
+        actionController.completionHandler = { [weak self] updatedTodo in
+            guard let self = self else { return }
+
+            // ✅ CoreData’dan ilgili `ToDoEntity`'yi bul ve verileri çek
+            if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == updatedTodo.id }) {
+                let description = todoEntity.descriptionText ?? "" // CoreData'dan gelen açıklama
+                let createdDate = todoEntity.createdDate ?? Date() // CoreData'dan gelen tarih
+
+                self.viewModel.updateTodoInCoreData(updatedTodo, description: description, createdDate: createdDate)
+            }
+
+            DispatchQueue.main.async {
+                self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            }
+        }
+
+        navigationController?.pushViewController(actionController, animated: true)
     }
+
+
+
+
+
+
+
     
     func shareItem(at indexPath: IndexPath) {
         let todo = viewModel.toDoList[indexPath.row]
@@ -152,8 +300,8 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource {
             self.tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }
-
-   
+    
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.toDoList.count
     }
@@ -169,21 +317,21 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource {
     
     func navigateToEditScreen(with todo: Todo) {
         print("Переход на экран редактирования для задачи: \(todo.todo)")
- 
+        
     }
     
     @IBAction func newActionButton(_ sender: Any) {
-        let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
-        coordinator.start(
-            onAddNewTodo: { [weak self] newToDo in
-
-                DispatchQueue.main.async {
-                    self?.tableView.reloadData()
-                }
-            },
-            toDoList: nil,
-            onEditTodo: { _ in }
-        )
+//        let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
+//        coordinator.start(
+//            onAddNewTodo: { [weak self] newToDo in
+//                
+//                DispatchQueue.main.async {
+//                    self?.tableView.reloadData()
+//                }
+//            },
+//            toDoList: nil,
+//            onEditTodo: { _ in }
+//        )
     }
     
 }

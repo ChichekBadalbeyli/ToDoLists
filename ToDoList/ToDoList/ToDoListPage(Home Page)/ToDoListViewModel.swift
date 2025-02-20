@@ -170,6 +170,48 @@ import CoreData
 //
 //}
 
+//class ToDoListViewModel {
+//    var toDoListManager = ToDoListManager()
+//        var toDoList = [Todo]() // Убедитесь, что это var, а не let
+//        var success: (() -> Void)?
+//        var error: ((String) -> Void)?
+//
+//    func getAndSaveTodos() {
+//        toDoListManager.fetchToDoList(endpoint: .toDoListEndpoint) { [weak self] data, errorMessage in
+//            guard let self = self else { return }
+//
+//            if let errorMessage = errorMessage {
+//                self.error?(errorMessage)
+//                return
+//            }
+//
+//            guard let data = data, !data.todos.isEmpty else {
+//                return
+//            }
+//
+//            CoreDataManager.shared.mergeToDos(apiToDos: data.todos)
+//
+//            self.toDoList = self.convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
+//
+//            DispatchQueue.main.async {
+//                self.success?()
+//            }
+//        }
+//    }
+//
+//    private func convertToDoEntitiesToTodos(_ entities: [ToDoEntity]) -> [Todo] {
+//        return entities.map { entity in
+//            return Todo(id: Int(entity.id), todo: entity.todo ?? "", completed: entity.completed, userID: Int(entity.userId))
+//        }
+//    }
+//
+//
+//    func deleteTodoFromCoreData(_ todo: Todo) {
+//        if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == Int64(todo.id) }) {
+//            CoreDataManager.shared.deleteToDoEntity(todoEntity)
+//        }
+//    }
+//}
 class ToDoListViewModel {
     var toDoListManager = ToDoListManager()
     var toDoList = [Todo]()
@@ -206,6 +248,24 @@ class ToDoListViewModel {
     }
 
 
+        /// **🚀 CoreData'da Todo Güncelleme Fonksiyonu**
+        func updateTodoInCoreData(_ updatedTodo: Todo, description: String, createdDate: Date) {
+            CoreDataManager.shared.updateToDoInCoreData(
+                updatedTodo: updatedTodo,
+                description: description,
+                createdDate: createdDate,
+                isDelete: false
+            )
+
+            // `toDoList` içindeki Todo'yu güncelle
+            if let index = toDoList.firstIndex(where: { $0.id == updatedTodo.id }) {
+                toDoList[index] = updatedTodo
+            }
+
+            DispatchQueue.main.async {
+                self.success?()
+            }
+        }
     func deleteTodoFromCoreData(_ todo: Todo) {
         if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == Int64(todo.id) }) {
             CoreDataManager.shared.deleteToDoEntity(todoEntity)

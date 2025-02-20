@@ -14,37 +14,39 @@ class CoreDataManager {
     static let shared = CoreDataManager()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
-    func saveToDo(_ newTodo: Todo) {
+    func saveToDo(_ newTodo: Todo, description: String, createdDate: Date) {
         let todoEntity = ToDoEntity(context: context)
         todoEntity.todo = newTodo.todo
         todoEntity.completed = newTodo.completed
         todoEntity.userId = Int64(newTodo.userID)
-        todoEntity.createdDate = Date()
-        todoEntity.descriptionText = ""
+        todoEntity.createdDate = createdDate // ✅ Tarih kaydediliyor
+        todoEntity.descriptionText = description // ✅ Açıklama kaydediliyor
         todoEntity.isDelete = false
         saveContext()
     }
 
-    func updateToDoInCoreData(_ updatedTodo: Todo) {
+
+
+
+    func updateToDoInCoreData(updatedTodo: Todo, description: String, createdDate: Date, isDelete: Bool) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", updatedTodo.id)
-        
+
         do {
             let results = try context.fetch(fetchRequest)
             if let todoEntity = results.first {
                 todoEntity.todo = updatedTodo.todo
+                todoEntity.descriptionText = description
+                todoEntity.createdDate = createdDate
                 todoEntity.completed = updatedTodo.completed
-                todoEntity.userId = Int64(updatedTodo.userID)
-                todoEntity.createdDate = Date()
-                todoEntity.descriptionText = ""
-                todoEntity.isDelete = false
-                
+                todoEntity.isDelete = isDelete // ✅ Dışarıdan gelen değeri kullan
                 saveContext()
             }
         } catch {
-            print("Ошибка обновления задачи: \(error)")
+            print("❌ Hata: Görev güncellenemedi - \(error)")
         }
     }
+
 
     func saveContext() {
         if context.hasChanges {
@@ -56,6 +58,7 @@ class CoreDataManager {
             }
         }
     }
+    
 
     func loadToDos() -> [ToDoEntity] {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
@@ -71,9 +74,13 @@ class CoreDataManager {
     
     func mergeToDos(apiToDos: [Todo]) {
         for apiTodo in apiToDos {
-            saveToDo(apiTodo)
+            let description = "Varsayılan açıklama" // 🔹 API açıklama göndermiyorsa varsayılan değer
+            let createdDate = Date() // 🔹 Şu anki tarihi kullan
+
+            saveToDo(apiTodo, description: description, createdDate: createdDate) // ✅ Doğru çağrı
         }
     }
+
     
     func deleteToDoEntity(_ todoEntity: ToDoEntity) {
         context.delete(todoEntity)

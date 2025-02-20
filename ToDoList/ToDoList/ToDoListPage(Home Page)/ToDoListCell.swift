@@ -9,7 +9,18 @@ import UIKit
 
 class ToDoListCell: UITableViewCell {
     
-    var
+    var isCompleted = false
+    
+    var completeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.layer.cornerRadius = 20
+        button.layer.borderWidth = 1
+       // button.layer.borderColor  = UIColor.darkGray.cgColor
+        button.tintColor = .gray
+        button.setImage(UIImage(systemName: "circle"), for: .normal)
+        button.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
+        return button
+    }()
     
     var title: UILabel = {
         var titleLabel = UILabel()
@@ -41,10 +52,12 @@ class ToDoListCell: UITableViewCell {
         contentView.addSubview(title)
         contentView.addSubview(descriptions)
         contentView.addSubview(dates)
+        contentView.addSubview(completeButton)
         
         title.translatesAutoresizingMaskIntoConstraints = false
         descriptions.translatesAutoresizingMaskIntoConstraints = false
         dates.translatesAutoresizingMaskIntoConstraints = false
+        completeButton.translatesAutoresizingMaskIntoConstraints = false
     }
     
     
@@ -52,9 +65,9 @@ class ToDoListCell: UITableViewCell {
         title.anchor(
             top: contentView.topAnchor,
             bottom: descriptions.topAnchor,
-            leading: contentView.leadingAnchor,
+            leading: completeButton.trailingAnchor,
             trailing: contentView.trailingAnchor,
-            constraint: (top: 12, bottom: 6, leading: 32, trailing:0)
+            constraint: (top: 12, bottom: 6, leading: 8, trailing:0)
         )
         descriptions.anchor(
             top: title.bottomAnchor,
@@ -71,8 +84,25 @@ class ToDoListCell: UITableViewCell {
             constraint: (top: 6, bottom: 12, leading: 32, trailing: 0)
         )
         
+        completeButton.anchor(
+            top: nil,
+            bottom: nil,
+            leading: contentView.leadingAnchor,
+            trailing: nil,
+            constraint: (top: 0, bottom: 0, leading: 12, trailing: 0),
+            width: 24,
+            height: 24
+        )
+        
+        completeButton.centerYAnchor.constraint(equalTo: title.centerYAnchor).isActive = true
+        
     }
-    
+    @objc func completeButtonTapped() {
+        isCompleted.toggle()
+        let imageName = isCompleted ? "checkmark.circle.fill" : "circle"
+        completeButton.setImage(UIImage(systemName: imageName), for: .normal)
+        completeButton.tintColor = isCompleted ? .yellow  : .gray
+    }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: "ToDoListCell")
@@ -87,17 +117,17 @@ class ToDoListCell: UITableViewCell {
     
     func configure(with todo: Todo) {
         title.text = todo.todo
-        //   descriptions.text = todo.description
-        //   print("Description: \(todo.description ?? "No description")")
-        
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        //   dates.text = formatter.string(from: todo.createdDate ?? Date())
-        
-        title.textColor = .white
-        descriptions.textColor = .white
-        dates.textColor = .white
+           descriptions.text = CoreDataManager.shared.loadToDos()
+               .first(where: { $0.id == todo.id })?.descriptionText ?? "Açıklama yok" // ✅ Açıklama CoreData'dan çekiliyor
+
+           let formatter = DateFormatter()
+           formatter.dateStyle = .medium
+           formatter.timeStyle = .none
+
+           let createdDate = CoreDataManager.shared.loadToDos()
+               .first(where: { $0.id == todo.id })?.createdDate ?? Date()
+           
+           dates.text = formatter.string(from: createdDate)
     }
     
 }
