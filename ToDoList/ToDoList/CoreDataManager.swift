@@ -15,38 +15,66 @@ class CoreDataManager {
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     func saveToDo(_ newTodo: Todo, description: String, createdDate: Date) {
-        let todoEntity = ToDoEntity(context: context)
-        todoEntity.todo = newTodo.todo
-        todoEntity.completed = newTodo.completed
-        todoEntity.userId = Int64(newTodo.userID)
-        todoEntity.createdDate = createdDate // ✅ Tarih kaydediliyor
-        todoEntity.descriptionText = description // ✅ Açıklama kaydediliyor
-        todoEntity.isDelete = false
-        saveContext()
+        let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %d", newTodo.id)
+
+        do {
+            let results = try context.fetch(fetchRequest)
+            if let existingTodo = results.first {
+                // 🔹 Если запись уже есть, обновляем ее
+                existingTodo.todo = newTodo.todo
+                existingTodo.completed = newTodo.completed
+                existingTodo.userId = Int64(newTodo.userID)
+                existingTodo.createdDate = createdDate
+                existingTodo.descriptionText = description
+                existingTodo.isDelete = false
+            } else {
+                // 🔹 Иначе создаем новую запись
+                let todoEntity = ToDoEntity(context: context)
+                todoEntity.id = Int64(newTodo.id)
+                todoEntity.todo = newTodo.todo
+                todoEntity.completed = newTodo.completed
+                todoEntity.userId = Int64(newTodo.userID)
+                todoEntity.createdDate = createdDate
+                todoEntity.descriptionText = description
+                todoEntity.isDelete = false
+            }
+            saveContext()
+        } catch {
+            print("❌ Ошибка сохранения ToDo в CoreData: \(error)")
+        }
     }
 
-
-
-
-    func updateToDoInCoreData(updatedTodo: Todo, description: String, createdDate: Date, isDelete: Bool) {
+    func updateToDoDescriptionAndDate(byID id: Int, newDescription: String, newDate: Date) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %d", updatedTodo.id)
+        fetchRequest.predicate = NSPredicate(format: "id == %d", id)
 
         do {
             let results = try context.fetch(fetchRequest)
             if let todoEntity = results.first {
-                todoEntity.todo = updatedTodo.todo
-                todoEntity.descriptionText = description
-                todoEntity.createdDate = createdDate
-                todoEntity.completed = updatedTodo.completed
-                todoEntity.isDelete = isDelete // ✅ Dışarıdan gelen değeri kullan
+                todoEntity.descriptionText = newDescription
+                todoEntity.createdDate = newDate
                 saveContext()
             }
         } catch {
-            print("❌ Hata: Görev güncellenemedi - \(error)")
+            print(error.localizedDescription)
         }
     }
 
+    func updateToDoCompletionStatus(byID id: Int, isCompleted: Bool) {
+        let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %d", id)
+
+        do {
+            let results = try context.fetch(fetchRequest)
+            if let todoEntity = results.first {
+                todoEntity.completed = isCompleted
+                saveContext()
+            }
+        } catch {
+            print("❌ Ошибка обновления completed в CoreData: \(error)")
+        }
+    }
 
     func saveContext() {
         if context.hasChanges {
@@ -54,43 +82,61 @@ class CoreDataManager {
                 try context.save()
             } catch {
                 let nserror = error as NSError
-                fatalError("Не удалось сохранить контекст: \(nserror), \(nserror.userInfo)")
+                print("❌ Не удалось сохранить контекст: \(nserror), \(nserror.userInfo)")
             }
         }
     }
-    
 
     func loadToDos() -> [ToDoEntity] {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
-        
+
         do {
-            let todos = try context.fetch(fetchRequest)
-            return todos
+            return try context.fetch(fetchRequest)
         } catch {
-            print("Ошибка загрузки задач: \(error)")
+            print("❌ Ошибка загрузки ToDos из CoreData: \(error)")
             return []
         }
     }
-    
+
     func mergeToDos(apiToDos: [Todo]) {
         for apiTodo in apiToDos {
-            let description = "Varsayılan açıklama" // 🔹 API açıklama göndermiyorsa varsayılan değer
-            let createdDate = Date() // 🔹 Şu anki tarihi kullan
+            let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %d", apiTodo.id)
 
-            saveToDo(apiTodo, description: description, createdDate: createdDate) // ✅ Doğru çağrı
+            do {
+                let results = try context.fetch(fetchRequest)
+                if let existingTodo = results.first {
+                    // 🔹 Если запись уже есть, обновляем только `todo` и `completed`, но не трогаем описание
+                    existingTodo.todo = apiTodo.todo
+
+                    // ✅ Сохраняем `completed`, если оно было уже отмечено как выполненное
+                    if existingTodo.completed == false {
+                        existingTodo.completed = apiTodo.completed
+                    }
+                } else {
+                    // 🔹 Если записи нет, создаем новую
+                    let newTodo = ToDoEntity(context: context)
+                    newTodo.id = Int64(apiTodo.id)
+                    newTodo.todo = apiTodo.todo
+                    newTodo.completed = apiTodo.completed
+                    newTodo.userId = Int64(apiTodo.userID)
+                    newTodo.createdDate = Date()
+                    newTodo.descriptionText = "Varsayılan açıklama"
+                    newTodo.isDelete = false
+                }
+            } catch {
+                print("❌ Ошибка обновления ToDo из API в CoreData: \(error)")
+            }
         }
+        saveContext()
     }
 
-    
     func deleteToDoEntity(_ todoEntity: ToDoEntity) {
         context.delete(todoEntity)
-
         do {
             try context.save()
         } catch {
-            print("Error deleting ToDoEntity: \(error)")
+            print("❌ Ошибка удаления ToDoEntity: \(error)")
         }
     }
-
-
 }
