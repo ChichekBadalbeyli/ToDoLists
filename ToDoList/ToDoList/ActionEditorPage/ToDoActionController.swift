@@ -1,3 +1,4 @@
+
 //
 //  ToDoActionController.swift
 //  ToDoList
@@ -112,22 +113,28 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
             constraint: (top: 16, bottom: 20, leading: 20, trailing: 20)
         )
     }
-    
+
     @objc private func saveChanges() {
-        guard var todo = todo else { return }
-        
-        let updatedDescription = descriptionTextView.text ?? ""
-        let updatedDate = Date()
-        
-        CoreDataManager.shared.updateToDoDescriptionAndDate(byID: todo.id, newDescription: updatedDescription, newDate: updatedDate)
-        
-        if let updatedEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
-            todo.todo = heading.text ?? todo.todo
-            completionHandler?(todo)
+        let title = heading.text ?? ""
+        let description = descriptionTextView.text ?? ""
+        let createdDate = Date()
+
+        if var todo = todo {
+            CoreDataManager.shared.updateToDoDescriptionAndDate(byID: todo.id, newDescription: description, newDate: createdDate)
+            if let updatedTodo = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
+                todo.todo = title
+                completionHandler?(todo)
+            }
+        } else {
+            let newID = Int.random(in: 1000...9999)
+            let newTodo = Todo(id: newID, todo: title, completed: false, userID: 1)
+            CoreDataManager.shared.saveToDo(newTodo, description: description, createdDate: createdDate)
+            completionHandler?(newTodo)
         }
-        
+
         navigationController?.popViewController(animated: true)
     }
+
 }
 
 //1.editleyib geri qayidanda birinci sehifedeki heading update olsun

@@ -15,10 +15,10 @@ struct Welcome: Codable {
 
 // MARK: - Todo
 struct Todo: Codable {
-    var id: Int  // Change to var
-    var todo: String  // Change to var
-    var completed: Bool  // Change to var
-    var userID: Int  // Change to var
+    var id: Int 
+    var todo: String
+    var completed: Bool
+    var userID: Int
 
     enum CodingKeys: String, CodingKey {
         case id, todo, completed

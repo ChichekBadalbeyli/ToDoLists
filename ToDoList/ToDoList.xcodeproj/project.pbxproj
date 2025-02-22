@@ -28,7 +28,6 @@
 		39955E642D648A7200E4A76B /* BaseFuction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E632D648A7200E4A76B /* BaseFuction.swift */; };
 		39955E722D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E702D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift */; };
 		39955E732D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E712D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift */; };
-		39955E752D6799DC00E4A76B /* ActionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E742D6799DC00E4A76B /* ActionViewModel.swift */; };
 		39955E772D679FAF00E4A76B /* ToDoActionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39955E762D679FAF00E4A76B /* ToDoActionController.swift */; };
 /* End PBXBuildFile section */
 
@@ -55,7 +54,6 @@
 		39955E632D648A7200E4A76B /* BaseFuction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseFuction.swift; sourceTree = "<group>"; };
 		39955E702D65BCF200E4A76B /* ToDoEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ToDoEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
 		39955E712D65BCF200E4A76B /* ToDoEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ToDoEntity+CoreDataProperties.swift"; path = "../ToDoEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
-		39955E742D6799DC00E4A76B /* ActionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionViewModel.swift; sourceTree = "<group>"; };
 		39955E762D679FAF00E4A76B /* ToDoActionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoActionController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -144,7 +142,6 @@
 			isa = PBXGroup;
 			children = (
 				39955E762D679FAF00E4A76B /* ToDoActionController.swift */,
-				39955E742D6799DC00E4A76B /* ActionViewModel.swift */,
 			);
 			path = ActionEditorPage;
 			sourceTree = "<group>";
@@ -239,7 +236,6 @@
 				393727D92D0075C7003CB76E /* ToDoListEndpoint.swift in Sources */,
 				393727E12D01E4A9003CB76E /* ToDoListCoordinator.swift in Sources */,
 				39955E642D648A7200E4A76B /* BaseFuction.swift in Sources */,
-				39955E752D6799DC00E4A76B /* ActionViewModel.swift in Sources */,
 				393727CC2CFF2F3D003CB76E /* ToDoListCell.swift in Sources */,
 				393727BD2CFF1D4C003CB76E /* ToDoList.xcdatamodeld in Sources */,
 				393727E52D032790003CB76E /* CoreDataManager.swift in Sources */,

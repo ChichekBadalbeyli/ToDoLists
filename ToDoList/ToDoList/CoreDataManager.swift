@@ -1,9 +1,3 @@
-//
-//  CoreDataManager.swift
-//  ToDoList
-//
-//  Created by Chichek on 06.12.24.
-//
 
 import Foundation
 import CoreData
@@ -21,15 +15,14 @@ class CoreDataManager {
         do {
             let results = try context.fetch(fetchRequest)
             if let existingTodo = results.first {
-                // 🔹 Если запись уже есть, обновляем ее
+                print("🔄 Mevcut not güncelleniyor: \(newTodo.todo)")
                 existingTodo.todo = newTodo.todo
                 existingTodo.completed = newTodo.completed
                 existingTodo.userId = Int64(newTodo.userID)
                 existingTodo.createdDate = createdDate
                 existingTodo.descriptionText = description
-                existingTodo.isDelete = false
             } else {
-                // 🔹 Иначе создаем новую запись
+                print("✅ Yeni not ekleniyor: \(newTodo.todo)")
                 let todoEntity = ToDoEntity(context: context)
                 todoEntity.id = Int64(newTodo.id)
                 todoEntity.todo = newTodo.todo
@@ -41,7 +34,7 @@ class CoreDataManager {
             }
             saveContext()
         } catch {
-            print("❌ Ошибка сохранения ToDo в CoreData: \(error)")
+            print(" \(error)")
         }
     }
 
@@ -72,7 +65,7 @@ class CoreDataManager {
                 saveContext()
             }
         } catch {
-            print("❌ Ошибка обновления completed в CoreData: \(error)")
+            print(" \(error)")
         }
     }
 
@@ -82,21 +75,24 @@ class CoreDataManager {
                 try context.save()
             } catch {
                 let nserror = error as NSError
-                print("❌ Не удалось сохранить контекст: \(nserror), \(nserror.userInfo)")
             }
         }
     }
 
+
     func loadToDos() -> [ToDoEntity] {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(key: "createdDate", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
 
         do {
-            return try context.fetch(fetchRequest)
+            let todos = try context.fetch(fetchRequest)
+            return todos
         } catch {
-            print("❌ Ошибка загрузки ToDos из CoreData: \(error)")
             return []
         }
     }
+
 
     func mergeToDos(apiToDos: [Todo]) {
         for apiTodo in apiToDos {
@@ -106,15 +102,11 @@ class CoreDataManager {
             do {
                 let results = try context.fetch(fetchRequest)
                 if let existingTodo = results.first {
-                    // 🔹 Если запись уже есть, обновляем только `todo` и `completed`, но не трогаем описание
                     existingTodo.todo = apiTodo.todo
-
-                    // ✅ Сохраняем `completed`, если оно было уже отмечено как выполненное
                     if existingTodo.completed == false {
                         existingTodo.completed = apiTodo.completed
                     }
                 } else {
-                    // 🔹 Если записи нет, создаем новую
                     let newTodo = ToDoEntity(context: context)
                     newTodo.id = Int64(apiTodo.id)
                     newTodo.todo = apiTodo.todo
@@ -125,7 +117,7 @@ class CoreDataManager {
                     newTodo.isDelete = false
                 }
             } catch {
-                print("❌ Ошибка обновления ToDo из API в CoreData: \(error)")
+                print(" \(error)")
             }
         }
         saveContext()
@@ -133,10 +125,14 @@ class CoreDataManager {
 
     func deleteToDoEntity(_ todoEntity: ToDoEntity) {
         context.delete(todoEntity)
+
         do {
             try context.save()
         } catch {
-            print("❌ Ошибка удаления ToDoEntity: \(error)")
+            print("\(error)")
         }
     }
+
+
+    
 }
