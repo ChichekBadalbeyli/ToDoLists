@@ -1,3 +1,9 @@
+//
+//  CoreDataManager.swift
+//  ToDoList
+//
+//  Created by Chichek on 18.02.25.
+//
 
 import Foundation
 import CoreData
@@ -7,22 +13,20 @@ class CoreDataManager {
     
     static let shared = CoreDataManager()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-
+    
     func saveToDo(_ newTodo: Todo, description: String, createdDate: Date) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", newTodo.id)
-
+        
         do {
             let results = try context.fetch(fetchRequest)
             if let existingTodo = results.first {
-                print("🔄 Mevcut not güncelleniyor: \(newTodo.todo)")
                 existingTodo.todo = newTodo.todo
                 existingTodo.completed = newTodo.completed
                 existingTodo.userId = Int64(newTodo.userID)
                 existingTodo.createdDate = createdDate
                 existingTodo.descriptionText = description
             } else {
-                print("✅ Yeni not ekleniyor: \(newTodo.todo)")
                 let todoEntity = ToDoEntity(context: context)
                 todoEntity.id = Int64(newTodo.id)
                 todoEntity.todo = newTodo.todo
@@ -37,11 +41,11 @@ class CoreDataManager {
             print(" \(error)")
         }
     }
-
+    
     func updateToDoDescriptionAndDate(byID id: Int, newDescription: String, newDate: Date) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", id)
-
+        
         do {
             let results = try context.fetch(fetchRequest)
             if let todoEntity = results.first {
@@ -53,11 +57,11 @@ class CoreDataManager {
             print(error.localizedDescription)
         }
     }
-
+    
     func updateToDoCompletionStatus(byID id: Int, isCompleted: Bool) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", id)
-
+        
         do {
             let results = try context.fetch(fetchRequest)
             if let todoEntity = results.first {
@@ -68,7 +72,7 @@ class CoreDataManager {
             print(" \(error)")
         }
     }
-
+    
     func saveContext() {
         if context.hasChanges {
             do {
@@ -78,13 +82,13 @@ class CoreDataManager {
             }
         }
     }
-
-
+    
+    
     func loadToDos() -> [ToDoEntity] {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "createdDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
-
+        
         do {
             let todos = try context.fetch(fetchRequest)
             return todos
@@ -92,13 +96,13 @@ class CoreDataManager {
             return []
         }
     }
-
-
+    
+    
     func mergeToDos(apiToDos: [Todo]) {
         for apiTodo in apiToDos {
             let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "id == %d", apiTodo.id)
-
+            
             do {
                 let results = try context.fetch(fetchRequest)
                 if let existingTodo = results.first {
@@ -113,7 +117,7 @@ class CoreDataManager {
                     newTodo.completed = apiTodo.completed
                     newTodo.userId = Int64(apiTodo.userID)
                     newTodo.createdDate = Date()
-                    newTodo.descriptionText = "Varsayılan açıklama"
+                    newTodo.descriptionText = ""
                     newTodo.isDelete = false
                 }
             } catch {
@@ -122,10 +126,10 @@ class CoreDataManager {
         }
         saveContext()
     }
-
+    
     func deleteToDoEntity(_ todoEntity: ToDoEntity) {
         context.delete(todoEntity)
-
+        
         do {
             try context.save()
         } catch {
@@ -133,6 +137,4 @@ class CoreDataManager {
         }
     }
 
-
-    
 }

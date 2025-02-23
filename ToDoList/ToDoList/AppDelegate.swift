@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  ToDoList
 //
-//  Created by Chichek on 03.12.24.
+//  Created by Chichek on 18.02.25.
 //
 
 import UIKit

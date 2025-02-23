@@ -15,9 +15,9 @@ class ToDoListCoordinator: Coordinator {
     }
     
     func start(onAddNewTodo: @escaping (Todo) -> Void, toDoList: Todo?) {
-        let controller = ToDoActionController() 
+        let controller = ToDoActionController()
         controller.todo = toDoList
+        controller.completionHandler = onAddNewTodo
         navigator.pushViewController(controller, animated: true)
     }
-
 }

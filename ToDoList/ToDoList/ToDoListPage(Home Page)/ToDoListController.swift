@@ -8,7 +8,7 @@
 import UIKit
 import Alamofire
 
-class ToDoListController: UIViewController {
+class ToDoListController: ExtensionCofigureController  {
     
     var viewModel = ToDoListViewModel()
     
@@ -59,7 +59,6 @@ class ToDoListController: UIViewController {
         return search
     }()
     
-    
     var microphone: UIButton = {
         let microphoneButton = UIButton()
         return microphoneButton
@@ -80,14 +79,13 @@ class ToDoListController: UIViewController {
         return button
     }()
     
-    
     var footer: UIView = {
         let footer = UIView()
         footer.backgroundColor = .gray
         return footer
     }()
     
-    func configureUI() {
+    override func configureUI() {
         view.addSubview(topSafeArea)
         view.addSubview(bottomSafeArea)
         view.addSubview(headLabel)
@@ -107,7 +105,7 @@ class ToDoListController: UIViewController {
         addTaskButton.translatesAutoresizingMaskIntoConstraints = false
     }
     
-    func configureConstraints() {
+    override func configureConstraints() {
         topSafeArea.anchor(
             top: view.topAnchor,
             bottom: view.safeAreaLayoutGuide.topAnchor,
@@ -179,7 +177,7 @@ class ToDoListController: UIViewController {
         
     }
     
-    func configureTableView() {
+    override func configureTableView() {
         tableView.register(ToDoListCell.self, forCellReuseIdentifier: "ToDoListCell")
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 106
@@ -191,10 +189,6 @@ class ToDoListController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        
-        configureUI()
-        configureConstraints()
-        configureTableView()
         
         if viewModel.toDoList.isEmpty {
             viewModel.getAndSaveTodos()
@@ -223,28 +217,27 @@ class ToDoListController: UIViewController {
             print(" \(errorMessage)")
         }
     }
-
+    
     @objc func addTaskTapped() {
-        let actionController = ToDoActionController()
-        actionController.completionHandler = { [weak self] newTodo in
-            guard let self = self else { return }
+        let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
 
+        coordinator.start(onAddNewTodo: { [weak self] newTodo in
+            guard let self = self else { return }
+            
             if self.viewModel.toDoList.contains(where: { $0.todo == newTodo.todo }) {
                 return
             }
             
             self.viewModel.addNewTodo(title: newTodo.todo, description: "")
-
             self.viewModel.toDoList = self.viewModel.convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
-            
+
             DispatchQueue.main.async {
                 self.tableView.reloadData()
                 self.footerCountLabel.text = "\(self.viewModel.toDoList.count) Задач"
             }
-        }
-        navigationController?.pushViewController(actionController, animated: true)
+        }, toDoList: nil)
     }
-    
+
     @objc func micButtonTapped() {
         
     }
@@ -268,24 +261,22 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
     }
     
     func editItem(at indexPath: IndexPath) {
-        let selectedTodo = viewModel.toDoList[indexPath.row]
+        let isSearchActive = viewModel.isSearching
+        let selectedTodo = isSearchActive ? viewModel.filteredToDoList[indexPath.row] : viewModel.toDoList[indexPath.row]
         
-        let actionController = ToDoActionController()
-        actionController.todo = selectedTodo
-        
-        actionController.completionHandler = { [weak self] updatedTodo in
+        let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
+
+        coordinator.start(onAddNewTodo: { [weak self] updatedTodo in
             guard let self = self else { return }
-            
+
             if let index = self.viewModel.toDoList.firstIndex(where: { $0.id == updatedTodo.id }) {
                 self.viewModel.toDoList[index] = updatedTodo
             }
-            
+
             DispatchQueue.main.async {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
             }
-        }
-        
-        navigationController?.pushViewController(actionController, animated: true)
+        }, toDoList: selectedTodo)
     }
     
     func shareItem(at indexPath: IndexPath) {
@@ -293,14 +284,15 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
         let activityVC = UIActivityViewController(activityItems: [todo.todo], applicationActivities: nil)
         present(activityVC, animated: true)
     }
+    
     private func updateFooterCount() {
         footerCountLabel.text = "\(viewModel.toDoList.count) Задач"
     }
-
+    
     func deleteItem(at indexPath: IndexPath) {
         let isSearchActive = viewModel.isSearching
         let todo = isSearchActive ? viewModel.filteredToDoList[indexPath.row] : viewModel.toDoList[indexPath.row]
-
+        
         viewModel.deleteTodoFromCoreData(todo)
         
         DispatchQueue.main.async {
@@ -320,54 +312,44 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return
-        viewModel.isSearching ? viewModel.filteredToDoList.count : viewModel.toDoList.count
+        return viewModel.isSearching ? viewModel.filteredToDoList.count : viewModel.toDoList.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoListCell", for: indexPath) as! ToDoListCell
         
-        // ✅ `isSearching` aktifse `filteredToDoList`, değilse `toDoList` kullan
         let isSearchActive = viewModel.isSearching
         let dataSource = isSearchActive ? viewModel.filteredToDoList : viewModel.toDoList
-
-        // ✅ `indexPath.row` geçerli mi kontrol et!
-        guard indexPath.row < dataSource.count else {
-            print("❌ Hata: indexPath \(indexPath.row) mevcut değil! Toplam: \(dataSource.count)")
-            return UITableViewCell() // Boş bir hücre döndür
-        }
-
         let todo = dataSource[indexPath.row]
-
         cell.configure(with: todo) { [weak self] todoID, isCompleted in
             guard let self = self else { return }
-
-            print("🟡 cellForRowAt - Tamamlanma değiştirildi - ID: \(todoID), Yeni Durum: \(isCompleted)")
-
+            
+            
             self.viewModel.toggleCompletionStatus(for: todoID, isCompleted: isCompleted)
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { // ✅ UI'ya zaman veriyoruz
-                print("🔄 Satır Güncelleniyor: \(indexPath.row)")
-
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                
                 if isSearchActive {
-                    self.tableView.reloadData() // ✅ Tüm tabloyu güncelle
+                    self.viewModel.searchTodos(query: self.viewModel.searchQuery)
+                    cell.isUserInteractionEnabled = true
+                    cell.contentView.isUserInteractionEnabled = true
+                    
+                    self.tableView.reloadData()
                 } else {
-                    if indexPath.row < self.viewModel.toDoList.count {
-                        self.tableView.reloadRows(at: [indexPath], with: .automatic)
+                    if let originalIndex = self.viewModel.toDoList.firstIndex(where: { $0.id == todoID }) {
+                        let originalIndexPath = IndexPath(row: originalIndex, section: 0)
+                        self.tableView.reloadRows(at: [originalIndexPath], with: .automatic)
                     } else {
-                        self.tableView.reloadData() // Güvenlik için tüm tabloyu yenile
+                        self.tableView.reloadData()
                     }
                 }
             }
         }
-
+        
         cell.backgroundColor = .black
         cell.selectionStyle = .none
         return cell
     }
-
-
-
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         viewModel.searchTodos(query: searchText)

@@ -9,7 +9,7 @@
 import UIKit
 import Alamofire
 
-class ToDoActionController: UIViewController, UITextViewDelegate {
+class ToDoActionController: ExtensionCofigureController {
     
     var todo: Todo?
     var completionHandler: ((Todo) -> Void)?
@@ -45,8 +45,6 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
-        configureUI()
-        configureConstraints()
         loadData()
     }
     
@@ -78,7 +76,7 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
         }
     }
     
-    private func configureUI() {
+ override func configureUI() {
         view.addSubview(heading)
         view.addSubview(date)
         view.addSubview(descriptionTextView)
@@ -88,7 +86,7 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
         descriptionTextView.translatesAutoresizingMaskIntoConstraints = false
     }
     
-    private func configureConstraints() {
+    override func configureConstraints() {
         heading.anchor(
             top: view.safeAreaLayoutGuide.topAnchor,
             bottom: date.topAnchor,
@@ -113,14 +111,16 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
             constraint: (top: 16, bottom: 20, leading: 20, trailing: 20)
         )
     }
-
+    
     @objc private func saveChanges() {
         let title = heading.text ?? ""
         let description = descriptionTextView.text ?? ""
-        let createdDate = Date()
-
+        
         if var todo = todo {
-            CoreDataManager.shared.updateToDoDescriptionAndDate(byID: todo.id, newDescription: description, newDate: createdDate)
+            let existingEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id })
+            let existingDate = existingEntity?.createdDate ?? Date()
+            CoreDataManager.shared.updateToDoDescriptionAndDate(byID: todo.id, newDescription: description, newDate: existingDate)
+            
             if let updatedTodo = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
                 todo.todo = title
                 completionHandler?(todo)
@@ -128,16 +128,16 @@ class ToDoActionController: UIViewController, UITextViewDelegate {
         } else {
             let newID = Int.random(in: 1000...9999)
             let newTodo = Todo(id: newID, todo: title, completed: false, userID: 1)
-            CoreDataManager.shared.saveToDo(newTodo, description: description, createdDate: createdDate)
+            
+            let now = Date()
+            CoreDataManager.shared.saveToDo(newTodo, description: description, createdDate: now)
+            
             completionHandler?(newTodo)
         }
-
+        
         navigationController?.popViewController(animated: true)
     }
-
+    
+    
 }
 
-//1.editleyib geri qayidanda birinci sehifedeki heading update olsun
-//2.description geriqayidanda gorunsun
-//3. ui i duzelt
-//4.naming problemi
