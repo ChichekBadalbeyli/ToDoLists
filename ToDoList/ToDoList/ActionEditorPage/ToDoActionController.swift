@@ -76,7 +76,7 @@ class ToDoActionController: ExtensionCofigureController {
         }
     }
     
- override func configureUI() {
+    override func configureUI() {
         view.addSubview(heading)
         view.addSubview(date)
         view.addSubview(descriptionTextView)
@@ -137,7 +137,6 @@ class ToDoActionController: ExtensionCofigureController {
         
         navigationController?.popViewController(animated: true)
     }
-    
-    
+
 }
 

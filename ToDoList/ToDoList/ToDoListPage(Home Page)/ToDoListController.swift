@@ -26,6 +26,7 @@ class ToDoListController: ExtensionCofigureController  {
     
     var tableView: UITableView = {
         let table = UITableView()
+        table.backgroundColor = .black
         table.separatorColor = .gray
         table.separatorStyle = .singleLine
         return table
@@ -40,28 +41,23 @@ class ToDoListController: ExtensionCofigureController  {
     }()
     
     var searchBar: UISearchBar = {
-        let search = UISearchBar()
-        search.placeholder = "Search"
+        var search = UISearchBar()
         search.layer.cornerRadius = 10
+        search.tintColor = .white
+        search.searchTextField.placeholder = "Search"
         search.barTintColor = .gray
         search.clipsToBounds = true
-        
-        if let textField = search.value(forKey: "searchField") as? UITextField {
-            let micButton = UIButton(type: .system)
-            micButton.setImage(UIImage(systemName: "mic.fill"), for: .normal)
-            micButton.tintColor = .white
-            micButton.addTarget(self, action: #selector(micButtonTapped), for: .touchUpInside)
-            
-            textField.rightView = micButton
-            textField.rightViewMode = .always
-        }
-        
+        let microphoneButton = UIButton(type: .custom)
+        microphoneButton.setImage(UIImage(named: "Mic"), for: .normal)
+        microphoneButton.tintColor = .white
+        microphoneButton.addTarget(self, action: #selector(microphoneTapped), for: .touchUpInside)
+        search.addSubview(microphoneButton)
+        microphoneButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            microphoneButton.trailingAnchor.constraint(equalTo: search.trailingAnchor, constant: -10),
+            microphoneButton.centerYAnchor.constraint(equalTo: search.centerYAnchor)
+        ])
         return search
-    }()
-    
-    var microphone: UIButton = {
-        let microphoneButton = UIButton()
-        return microphoneButton
     }()
     
     var footerCountLabel: UILabel = {
@@ -220,7 +216,7 @@ class ToDoListController: ExtensionCofigureController  {
     
     @objc func addTaskTapped() {
         let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
-
+        
         coordinator.start(onAddNewTodo: { [weak self] newTodo in
             guard let self = self else { return }
             
@@ -230,15 +226,15 @@ class ToDoListController: ExtensionCofigureController  {
             
             self.viewModel.addNewTodo(title: newTodo.todo, description: "")
             self.viewModel.toDoList = self.viewModel.convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
-
+            
             DispatchQueue.main.async {
                 self.tableView.reloadData()
                 self.footerCountLabel.text = "\(self.viewModel.toDoList.count) Задач"
             }
         }, toDoList: nil)
     }
-
-    @objc func micButtonTapped() {
+    
+    @objc func microphoneTapped() {
         
     }
 }
@@ -260,19 +256,20 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
         }
     }
     
+    
     func editItem(at indexPath: IndexPath) {
         let isSearchActive = viewModel.isSearching
         let selectedTodo = isSearchActive ? viewModel.filteredToDoList[indexPath.row] : viewModel.toDoList[indexPath.row]
         
         let coordinator = ToDoListCoordinator(navigator: self.navigationController ?? UINavigationController())
-
+        
         coordinator.start(onAddNewTodo: { [weak self] updatedTodo in
             guard let self = self else { return }
-
+            
             if let index = self.viewModel.toDoList.firstIndex(where: { $0.id == updatedTodo.id }) {
                 self.viewModel.toDoList[index] = updatedTodo
             }
-
+            
             DispatchQueue.main.async {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
             }
@@ -284,7 +281,6 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
         let activityVC = UIActivityViewController(activityItems: [todo.todo], applicationActivities: nil)
         present(activityVC, animated: true)
     }
-    
     private func updateFooterCount() {
         footerCountLabel.text = "\(viewModel.toDoList.count) Задач"
     }
@@ -321,35 +317,26 @@ extension ToDoListController: UITableViewDelegate, UITableViewDataSource, UISear
         let isSearchActive = viewModel.isSearching
         let dataSource = isSearchActive ? viewModel.filteredToDoList : viewModel.toDoList
         let todo = dataSource[indexPath.row]
+        
         cell.configure(with: todo) { [weak self] todoID, isCompleted in
             guard let self = self else { return }
-            
-            
+            if let index = self.viewModel.toDoList.firstIndex(where: { $0.id == todoID }) {
+                self.viewModel.toDoList[index].completed = isCompleted
+            }
             self.viewModel.toggleCompletionStatus(for: todoID, isCompleted: isCompleted)
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                
-                if isSearchActive {
-                    self.viewModel.searchTodos(query: self.viewModel.searchQuery)
-                    cell.isUserInteractionEnabled = true
-                    cell.contentView.isUserInteractionEnabled = true
-                    
-                    self.tableView.reloadData()
-                } else {
-                    if let originalIndex = self.viewModel.toDoList.firstIndex(where: { $0.id == todoID }) {
-                        let originalIndexPath = IndexPath(row: originalIndex, section: 0)
-                        self.tableView.reloadRows(at: [originalIndexPath], with: .automatic)
-                    } else {
-                        self.tableView.reloadData()
-                    }
+            DispatchQueue.main.async {
+                if let originalIndex = self.viewModel.toDoList.firstIndex(where: { $0.id == todoID }) {
+                    let originalIndexPath = IndexPath(row: originalIndex, section: 0)
+                    self.tableView.reloadRows(at: [originalIndexPath], with: .none)
                 }
             }
         }
-        
         cell.backgroundColor = .black
         cell.selectionStyle = .none
         return cell
     }
+    
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         viewModel.searchTodos(query: searchText)

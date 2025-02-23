@@ -18,35 +18,42 @@ class ToDoListViewModel {
     var error: ((String) -> Void)?
     
     func getAndSaveTodos() {
-        toDoListManager.fetchToDoList(endpoint: .toDoListEndpoint) { [weak self] data, errorMessage in
-            guard let self = self else { return }
-            
-            if let errorMessage = errorMessage {
-                self.error?(errorMessage)
-                return
-            }
-            
-            guard let data = data, !data.todos.isEmpty else { return }
-            
-            CoreDataManager.shared.mergeToDos(apiToDos: data.todos)
-            self.toDoList = self.convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
-            
-            DispatchQueue.main.async {
-                self.success?()
+        DispatchQueue.global(qos: .background).async {
+            self.toDoListManager.fetchToDoList(endpoint: .toDoListEndpoint) { [weak self] data, errorMessage in
+                guard let self = self else { return }
+                
+                if let errorMessage = errorMessage {
+                    DispatchQueue.main.async {
+                        self.error?(errorMessage)
+                    }
+                    return
+                }
+                
+                guard let data = data, !data.todos.isEmpty else { return }
+                
+                CoreDataManager.shared.mergeToDos(apiToDos: data.todos)
+                let todos = self.convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
+                
+                DispatchQueue.main.async {
+                    self.toDoList = todos
+                    self.success?()
+                }
             }
         }
     }
     
     func searchTodos(query: String) {
         searchQuery = query
-        if query.isEmpty {
-            isSearching = false
-            filteredToDoList = []
-        } else {
-            isSearching = true
-            filteredToDoList = toDoList.filter { $0.todo.lowercased().contains(query.lowercased()) }
+        
+        DispatchQueue.global(qos: .userInitiated).async { // 📌 Поиск на отдельном потоке
+            let filtered = query.isEmpty ? [] : self.toDoList.filter { $0.todo.lowercased().contains(query.lowercased()) }
+            
+            DispatchQueue.main.async {
+                self.isSearching = !query.isEmpty
+                self.filteredToDoList = filtered
+                self.success?() // 🔄 Обновляем UI только в главном потоке
+            }
         }
-        success?()
     }
     
     
@@ -58,7 +65,6 @@ class ToDoListViewModel {
             
             return
         }
-        
         let newTodo = Todo(id: newID, todo: title, completed: false, userID: 1)
         
         CoreDataManager.shared.saveToDo(newTodo, description: description, createdDate: Date())
@@ -72,18 +78,17 @@ class ToDoListViewModel {
     }
     
     func toggleCompletionStatus(for todoID: Int, isCompleted: Bool) {
-        CoreDataManager.shared.updateToDoCompletionStatus(byID: todoID, isCompleted: isCompleted)
-        
-        if let index = toDoList.firstIndex(where: { $0.id == todoID }) {
-            toDoList[index].completed = isCompleted
-        }
-        
-        if isSearching {
-            filteredToDoList = toDoList.filter { $0.todo.lowercased().contains(searchQuery.lowercased()) }
-        }
-        
         DispatchQueue.main.async {
+            if let index = self.toDoList.firstIndex(where: { $0.id == todoID }) {
+                self.toDoList[index].completed = isCompleted
+            }
+            if self.isSearching {
+                self.filteredToDoList = self.toDoList.filter { $0.todo.lowercased().contains(self.searchQuery.lowercased()) }
+            }
             self.success?()
+        }
+        DispatchQueue.global(qos: .background).async {
+            CoreDataManager.shared.updateToDoCompletionStatus(byID: todoID, isCompleted: isCompleted)
         }
     }
     
@@ -118,5 +123,4 @@ class ToDoListViewModel {
             self.success?()
         }
     }
-    
 }

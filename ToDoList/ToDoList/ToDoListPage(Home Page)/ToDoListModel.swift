@@ -19,7 +19,7 @@ struct Todo: Codable {
     var todo: String
     var completed: Bool
     var userID: Int
-
+    
     enum CodingKeys: String, CodingKey {
         case id, todo, completed
         case userID = "userId"

@@ -136,5 +136,5 @@ class CoreDataManager {
             print("\(error)")
         }
     }
-
+    
 }

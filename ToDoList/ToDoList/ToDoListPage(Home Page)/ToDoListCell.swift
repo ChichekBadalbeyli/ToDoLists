@@ -9,7 +9,7 @@ import UIKit
 
 class ToDoListCell: UITableViewCell {
     var isCompleted: Bool = false
-    var todo: Todo?
+    private   var todo: Todo?
     var completionHandler: ((Int, Bool) -> Void)?
     
     let completeButton: UIButton = {
@@ -49,7 +49,7 @@ class ToDoListCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: "ToDoListCell")
         configureUI()
         configureConstraints()
-        completeButton.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -62,6 +62,7 @@ class ToDoListCell: UITableViewCell {
         contentView.addSubview(dates)
         contentView.addSubview(completeButton)
         
+        completeButton.addTarget(self, action: #selector(completeButtonTapped), for: .touchUpInside)
         title.translatesAutoresizingMaskIntoConstraints = false
         descriptions.translatesAutoresizingMaskIntoConstraints = false
         dates.translatesAutoresizingMaskIntoConstraints = false
@@ -120,8 +121,10 @@ class ToDoListCell: UITableViewCell {
     
     private func updateUI(isCompleted: Bool) {
         let imageName = isCompleted ? "TickIcon" : "Circle"
-        completeButton.setImage(UIImage(named: imageName), for: .normal)
-        completeButton.tintColor = isCompleted ? .yellow : .white
+        
+        self.completeButton.setImage(UIImage(named: imageName), for: .normal)
+        self.completeButton.tintColor = isCompleted ? .yellow : .white
+        
     }
     
     func configure(with todo: Todo, completionHandler: @escaping (Int, Bool) -> Void) {

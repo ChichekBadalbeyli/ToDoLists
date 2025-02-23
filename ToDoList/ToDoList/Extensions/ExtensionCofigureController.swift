@@ -8,17 +8,17 @@
 import UIKit
 
 class ExtensionCofigureController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         configureConstraints()
         configureTableView()
-
+        
     }
     
     func configureUI() {}
     func configureConstraints() {}
     func configureTableView(){}
-
+    
 }
