@@ -32,7 +32,7 @@ class ToDoListCell: UITableViewCell {
         let label = UILabel()
         label.numberOfLines = 0
         label.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        label.lineBreakMode = .byWordWrapping
+        label.textAlignment = .left
         label.textColor = .white
         return label
     }()
@@ -49,7 +49,6 @@ class ToDoListCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: "ToDoListCell")
         configureUI()
         configureConstraints()
-        
     }
     
     required init?(coder: NSCoder) {
@@ -132,18 +131,21 @@ class ToDoListCell: UITableViewCell {
         self.todo = todo
         self.completionHandler = completionHandler
         
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        
         if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
             descriptions.text = todoEntity.descriptionText ?? ""
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
             let createdDate = todoEntity.createdDate ?? Date()
             dates.text = formatter.string(from: createdDate)
         } else {
             descriptions.text = ""
+            dates.text = formatter.string(from: Date())
         }
         
         isCompleted = todo.completed
         updateUI(isCompleted: isCompleted)
     }
+    
     
 }

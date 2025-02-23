@@ -15,7 +15,7 @@ struct Welcome: Codable {
 
 // MARK: - Todo
 struct Todo: Codable {
-    var id: Int 
+    var id: Int
     var todo: String
     var completed: Bool
     var userID: Int

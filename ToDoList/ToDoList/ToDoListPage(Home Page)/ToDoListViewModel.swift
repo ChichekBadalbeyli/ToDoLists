@@ -45,13 +45,13 @@ class ToDoListViewModel {
     func searchTodos(query: String) {
         searchQuery = query
         
-        DispatchQueue.global(qos: .userInitiated).async { // 📌 Поиск на отдельном потоке
+        DispatchQueue.global(qos: .userInitiated).async {
             let filtered = query.isEmpty ? [] : self.toDoList.filter { $0.todo.lowercased().contains(query.lowercased()) }
             
             DispatchQueue.main.async {
                 self.isSearching = !query.isEmpty
                 self.filteredToDoList = filtered
-                self.success?() // 🔄 Обновляем UI только в главном потоке
+                self.success?() 
             }
         }
     }

@@ -35,10 +35,7 @@ class ToDoActionController: ExtensionCofigureController {
         let textView = UITextView()
         textView.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         textView.textColor = .white
-        textView.backgroundColor = .clear
-        textView.layer.borderWidth = 1
-        textView.layer.borderColor = UIColor.gray.cgColor
-        textView.layer.cornerRadius = 10
+        textView.backgroundColor = .black
         return textView
     }()
     
@@ -54,27 +51,22 @@ class ToDoActionController: ExtensionCofigureController {
     }
     
     private func loadData() {
-        guard let todo = todo else { return }
-        
-        heading.text = todo.todo
-        
-        if let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        if let todo = todo, let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
+            heading.text = todo.todo
             descriptionTextView.text = todoEntity.descriptionText ?? ""
-            
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-            
-            if let createdDate = todoEntity.createdDate {
-                date.text = formatter.string(from: createdDate)
-            } else {
-                date.text = formatter.string(from: Date())
-            }
+            let createdDate = todoEntity.createdDate ?? Date()
+            let formattedDate = formatter.string(from: createdDate)
+            date.text = formattedDate
         } else {
+            heading.text = ""
             descriptionTextView.text = ""
-            date.text = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
+            let formattedDate = formatter.string(from: Date())
+            date.text = formattedDate
         }
     }
+    
     
     override func configureUI() {
         view.addSubview(heading)
@@ -137,6 +129,6 @@ class ToDoActionController: ExtensionCofigureController {
         
         navigationController?.popViewController(animated: true)
     }
-
+    
 }
 
