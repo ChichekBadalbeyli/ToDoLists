@@ -8,7 +8,7 @@
 import Foundation
 import CoreData
 
-class ToDoListViewModel {
+final class ToDoListViewModel {
     var toDoListManager = ToDoListManager()
     var toDoList = [Todo]()
     var filteredToDoList = [Todo]()
@@ -28,7 +28,6 @@ class ToDoListViewModel {
                     }
                     return
                 }
-                
                 guard let data = data, !data.todos.isEmpty else { return }
                 
                 CoreDataManager.shared.mergeToDos(apiToDos: data.todos)
@@ -51,7 +50,7 @@ class ToDoListViewModel {
             DispatchQueue.main.async {
                 self.isSearching = !query.isEmpty
                 self.filteredToDoList = filtered
-                self.success?() 
+                self.success?()
             }
         }
     }
@@ -77,6 +76,14 @@ class ToDoListViewModel {
         }
     }
     
+    func convertToDoEntitiesToTodos(_ entities: [ToDoEntity]) -> [Todo] {
+        return entities.map { entity in
+            return Todo(id: Int(entity.id),
+                        todo: entity.todo ?? "",
+                        completed: entity.completed,
+                        userID: Int(entity.userId))
+        }
+    }
     func toggleCompletionStatus(for todoID: Int, isCompleted: Bool) {
         DispatchQueue.main.async {
             if let index = self.toDoList.firstIndex(where: { $0.id == todoID }) {
@@ -92,25 +99,23 @@ class ToDoListViewModel {
         }
     }
     
-    func convertToDoEntitiesToTodos(_ entities: [ToDoEntity]) -> [Todo] {
-        return entities.map { entity in
-            return Todo(id: Int(entity.id),
-                        todo: entity.todo ?? "",
-                        completed: entity.completed,
-                        userID: Int(entity.userId))
-        }
-    }
-    
     func updateTodoInCoreData(_ updatedTodo: Todo, description: String, createdDate: Date) {
-        CoreDataManager.shared.updateToDoDescriptionAndDate(byID: updatedTodo.id,
-                                                            newDescription: description,
-                                                            newDate: createdDate)
+        CoreDataManager.shared.updateToDo(
+            id: updatedTodo.id,
+            title: updatedTodo.todo,
+            description: description,
+            createdDate: createdDate
+        )
         self.toDoList = convertToDoEntitiesToTodos(CoreDataManager.shared.loadToDos())
+        if isSearching {
+            self.filteredToDoList = self.toDoList.filter { $0.todo.lowercased().contains(searchQuery.lowercased()) }
+        }
         
         DispatchQueue.main.async {
             self.success?()
         }
     }
+    
     
     func deleteTodoFromCoreData(_ todo: Todo) {
         guard let todoEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == Int64(todo.id) }) else { return }

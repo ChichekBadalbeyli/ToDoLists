@@ -7,7 +7,7 @@
 //
 import UIKit
 
-class ToDoListCell: UITableViewCell {
+final class ToDoListCell: UITableViewCell {
     var isCompleted: Bool = false
     private   var todo: Todo?
     var completionHandler: ((Int, Bool) -> Void)?

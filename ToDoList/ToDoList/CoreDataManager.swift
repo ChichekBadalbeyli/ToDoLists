@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 import UIKit
 
-class CoreDataManager {
+final class CoreDataManager {
     
     static let shared = CoreDataManager()
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
@@ -41,23 +41,24 @@ class CoreDataManager {
             print(" \(error)")
         }
     }
-    
-    func updateToDoDescriptionAndDate(byID id: Int, newDescription: String, newDate: Date) {
+
+    func updateToDo(id: Int, title: String, description: String, createdDate: Date) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", id)
-        
+
         do {
             let results = try context.fetch(fetchRequest)
             if let todoEntity = results.first {
-                todoEntity.descriptionText = newDescription
-                todoEntity.createdDate = newDate
-                saveContext()
+                todoEntity.todo = title // 🔥 Обновляем title
+                todoEntity.descriptionText = description // 🔥 Обновляем описание
+                todoEntity.createdDate = createdDate // 🔥 Обновляем дату
+                saveContext() // ✅ Сохраняем изменения
             }
         } catch {
-            print(error.localizedDescription)
+            print("Ошибка обновления ToDo в CoreData: \(error)")
         }
     }
-    
+
     func updateToDoCompletionStatus(byID id: Int, isCompleted: Bool) {
         let fetchRequest: NSFetchRequest<ToDoEntity> = ToDoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", id)

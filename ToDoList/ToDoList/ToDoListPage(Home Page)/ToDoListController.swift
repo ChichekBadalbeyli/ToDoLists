@@ -8,7 +8,7 @@
 import UIKit
 import Alamofire
 
-class ToDoListController: ExtensionCofigureController  {
+final class ToDoListController: ExtensionCofigureController  {
     
     var viewModel = ToDoListViewModel()
     

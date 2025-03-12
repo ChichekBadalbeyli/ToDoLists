@@ -9,7 +9,7 @@
 import Foundation
 import Alamofire
 
-class BaseManager {
+final class BaseManager {
     static let baseURL = "https://dummyjson.com/"
     
     static func getURL (with endpoint: String) -> String {

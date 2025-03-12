@@ -1,4 +1,3 @@
-
 //
 //  ToDoActionController.swift
 //  ToDoList
@@ -9,7 +8,7 @@
 import UIKit
 import Alamofire
 
-class ToDoActionController: ExtensionCofigureController {
+final  class ToDoActionController: ExtensionCofigureController {
     
     var todo: Todo?
     var completionHandler: ((Todo) -> Void)?
@@ -105,18 +104,21 @@ class ToDoActionController: ExtensionCofigureController {
     }
     
     @objc private func saveChanges() {
-        let title = heading.text ?? ""
+        guard let title = heading.text, !title.isEmpty else { return }
         let description = descriptionTextView.text ?? ""
         
         if var todo = todo {
-            let existingEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id })
-            let existingDate = existingEntity?.createdDate ?? Date()
-            CoreDataManager.shared.updateToDoDescriptionAndDate(byID: todo.id, newDescription: description, newDate: existingDate)
-            
+            CoreDataManager.shared.updateToDo(
+                id: todo.id,
+                title: title,
+                description: description,
+                createdDate: Date()
+            )
             if let updatedTodo = CoreDataManager.shared.loadToDos().first(where: { $0.id == todo.id }) {
-                todo.todo = title
-                completionHandler?(todo)
+                todo.todo = updatedTodo.todo ?? ""
+                todo.completed = updatedTodo.completed
             }
+            completionHandler?(todo)
         } else {
             let newID = Int.random(in: 1000...9999)
             let newTodo = Todo(id: newID, todo: title, completed: false, userID: 1)
@@ -124,11 +126,20 @@ class ToDoActionController: ExtensionCofigureController {
             let now = Date()
             CoreDataManager.shared.saveToDo(newTodo, description: description, createdDate: now)
             
-            completionHandler?(newTodo)
+            if let savedEntity = CoreDataManager.shared.loadToDos().first(where: { $0.id == newID }) {
+                let savedTodo = Todo(
+                    id: Int(savedEntity.id),
+                    todo: savedEntity.todo ?? "",
+                    completed: savedEntity.completed,
+                    userID: Int(savedEntity.userId)
+                )
+                completionHandler?(savedTodo)
+            }
         }
         
         navigationController?.popViewController(animated: true)
     }
+    
     
 }
 

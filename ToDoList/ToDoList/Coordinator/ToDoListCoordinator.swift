@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ToDoListCoordinator: Coordinator {
+final class ToDoListCoordinator: Coordinator {
     var navigator: UINavigationController
     
     init(navigator: UINavigationController) {
